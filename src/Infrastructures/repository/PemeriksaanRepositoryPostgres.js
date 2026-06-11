@@ -1,4 +1,5 @@
 import NotFoundError from '../../Commons/exceptions/NotFoundError.js';
+import InvariantError from '../../Commons/exceptions/InvariantError.js';
 
 export const makePemeriksaanRepositoryPostgres = (pool, idGenerator) => {
 
@@ -106,6 +107,49 @@ export const makePemeriksaanRepositoryPostgres = (pool, idGenerator) => {
     }
   };
 
+  // Tambahkan fungsi-fungsi ini di dalam factory makePemeriksaanRepositoryPostgres Anda
+
+  // 1. Fungsi mengambil seluruh data COMPLETED + Nama Lansia untuk diexport
+  const getAllPemeriksaanForExcel = async () => {
+    const query = {
+      text: `SELECT p.id, l.nama AS nama_lansia, l.jenis_kelamin, p.berat_badan, p.tinggi_badan, 
+                    p.suhu, p.spo2, p.detak_jantung, p.sistol, p.diastol, p.klasifikasi, p.created_at
+             FROM pemeriksaan p
+             JOIN lansia l ON p.lansia_id = l.id
+             WHERE p.status = 'COMPLETED'
+             ORDER BY p.created_at DESC`,
+    };
+
+    const result = await pool.query(query);
+    return result.rows; // Mengembalikan array of objects data pemeriksaan lengkap
+  };
+
+  // 2. Fungsi memasukkan banyak data sekaligus hasil dari import Excel
+  const insertBatchPemeriksaan = async (dataRows) => {
+    // Kita gunakan perulangan biasa (Loop) untuk memasukkan data satu per satu ke database
+    for (const row of dataRows) {
+      const query = {
+        text: `INSERT INTO pemeriksaan (id, lansia_id, berat_badan, tinggi_badan, suhu, spo2, detak_jantung, sistol, diastol, status, klasifikasi) 
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'COMPLETED', $10)`,
+        values: [
+          row.id,
+          row.lansia_id,
+          row.berat_badan,
+          row.tinggi_badan,
+          row.suhu,
+          row.spo2,
+          row.detak_jantung,
+          row.sistol,
+          row.diastol,
+          row.klasifikasi || 'Belau Diperiksa ML'
+        ],
+      };
+      await pool.query(query);
+    }
+    return true;
+  };
+
+  // Pastikan kedua fungsi ini didaftarkan di blok 'return' paling bawah file repository ya Wak!
   // Jangan lupa daftarkan getHistoryPemeriksaan di return bawah
   return {
     addPemeriksaan,
@@ -114,5 +158,7 @@ export const makePemeriksaanRepositoryPostgres = (pool, idGenerator) => {
     getHistoryPemeriksaan,
     cancelPemeriksaan,
     processPemeriksaan,
+    insertBatchPemeriksaan,
+    getAllPemeriksaanForExcel,
   };
 };

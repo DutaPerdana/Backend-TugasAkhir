@@ -35,6 +35,13 @@ import { makeEditLansiaUseCase } from '../Applications/use_case/EditLansiaUseCas
 import { makeDeleteLansiaUseCase } from '../Applications/use_case/DeleteLansiaUseCase.js';
 import { makeCancelPemeriksaanUseCase } from '../Applications/use_case/CancelPemeriksaanUseCase.js';
 import { makeLogoutUserUseCase } from '../Applications/use_case/LogoutUserUseCase.js';
+import { makeProcessPemeriksaanUseCase } from '../Applications/use_case/ProcessPemeriksaanUseCase.js';
+import { makeImportExcelUseCase } from '../Applications/use_case/ImportExcelUseCase.js';
+import { makeExportExcelUseCase } from '../Applications/use_case/ExportExcelUseCase.js';
+
+import { makeImportLansiaExcelUseCase } from '../Applications/use_case/ImportLansiaExcelUseCase.js';
+import { makeExportLansiaTemplateUseCase } from '../Applications/use_case/ExportLansiaTemplateUseCase.js';
+
 /**
  * Membuat objek container (wadah) kosong.
  */
@@ -120,6 +127,23 @@ const initContainer = () => {
 
   instances['LogoutUserUseCase'] = makeLogoutUserUseCase({
     authenticationRepository: instances['AuthenticationRepository'],
+  });
+
+  instances['ProcessPemeriksaanUseCase'] = makeProcessPemeriksaanUseCase({
+    pemeriksaanRepository: instances['PemeriksaanRepository'],
+  });
+
+  instances['ImportExcelUseCase'] = makeImportExcelUseCase({
+    pemeriksaanRepository: instances['PemeriksaanRepository'],
+  });
+
+  instances['ExportExcelUseCase'] = makeExportExcelUseCase({
+    pemeriksaanRepository: instances['PemeriksaanRepository'],
+  });
+
+  instances['ExportLansiaTemplateUseCase'] = makeExportLansiaTemplateUseCase();
+  instances['ImportLansiaExcelUseCase'] = makeImportLansiaExcelUseCase({
+    lansiaRepository: instances['LansiaRepository'], // Pastikan idGenerator tersedia di container Anda
   });
 };
 

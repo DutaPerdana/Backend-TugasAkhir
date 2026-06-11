@@ -1,7 +1,16 @@
-import makePemeriksaanHandler from './handler.js';
 import createPemeriksaanRouter from './routes.js';
+import {
+  makePemeriksaanHandler,
+  makeExcelHandler
+} from './handler.js';
 
 export default (container, authMiddleware) => {
   const pemeriksaanHandler = makePemeriksaanHandler(container);
-  return createPemeriksaanRouter(pemeriksaanHandler, authMiddleware);
+  const excelHandler = makeExcelHandler(container);
+
+  return createPemeriksaanRouter(
+    pemeriksaanHandler,
+    excelHandler,
+    authMiddleware
+  );
 };

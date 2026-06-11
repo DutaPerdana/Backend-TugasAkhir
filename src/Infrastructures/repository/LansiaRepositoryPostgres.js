@@ -67,6 +67,39 @@ export const makeLansiaRepositoryPostgres = (pool, idGenerator) => {
     }
   };
 
+  // Tambahkan fungsi ini di dalam factory makeLansiaRepositoryPostgres Anda
+
+  // Fungsi untuk memasukkan banyak data lansia sekaligus dari Excel
+  const insertBatchLansiav2 = async (dataRows) => {
+    // Menggunakan perulangan biasa (loop fungsional) untuk eksekusi query satu per satu
+    for (const row of dataRows) {
+      const query = {
+        text: 'INSERT INTO lansia (id, nama, alamat, tanggal_lahir, jenis_kelamin) VALUES ($1, $2, $3, $4, $5)',
+        values: [row.id, row.nama, row.alamat, row.tanggal_lahir, row.jenis_kelamin],
+      };
+      await pool.query(query);
+    }
+    return true;
+  };
+
+  // Fungsi untuk memasukkan banyak data lansia sekaligus dari Excel
+  const insertBatchLansia = async (dataRows) => {
+    // Menggunakan perulangan biasa (loop fungsional)
+    for (const row of dataRows) {
+
+      // INI KUNCINYA: ID dibuat di sini memanfaatkan idGenerator bawaan repository asli
+      const id = `lansia-${idGenerator(16)}`;
+
+      const query = {
+        text: 'INSERT INTO lansia (id, nama, alamat, tanggal_lahir, jenis_kelamin) VALUES ($1, $2, $3, $4, $5)',
+        values: [id, row.nama, row.alamat, row.tanggal_lahir, row.jenis_kelamin],
+      };
+      await pool.query(query);
+    }
+    return true;
+  };
+
+  // PENTING: Daftarkan 'insertBatchLansia' di dalam blok return paling bawah file ya Wak!
   /**
    * Mengubah status antrean dari PROCESSING menjadi CANCELLED.
    */
@@ -78,6 +111,8 @@ export const makeLansiaRepositoryPostgres = (pool, idGenerator) => {
     getAllLansia,
     editLansiaById,
     deleteLansiaById,
+    insertBatchLansia,
+    insertBatchLansiav2,
   };
 
 };

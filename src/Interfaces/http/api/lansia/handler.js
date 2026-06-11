@@ -58,4 +58,51 @@ const makeLansiaHandler = (container) => {
 
 };
 
-export default makeLansiaHandler;
+import multer from 'multer';
+
+// Setting multer untuk menangkap file di RAM sementara
+const uploadMemory = multer({ storage: multer.memoryStorage() }).single('excel_file');
+
+const makeLansiaExcelHandler = (container) => {
+
+  // Handler untuk DOWNLOAD TEMPLATE EXCEL
+  const getTemplateHandler = async (req, res, next) => {
+    try {
+      const exportLansiaTemplateUseCase = container.getInstance('ExportLansiaTemplateUseCase');
+      const buffer = await exportLansiaTemplateUseCase();
+
+      // Set header HTTP khusus agar dikenali sebagai unduhan excel asli
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename=Template_Import_Lansia.xlsx');
+
+      res.end(buffer);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Handler untuk UPLOAD/IMPORT BIODATA LANSIA
+  const postImportExcelHandler = async (req, res, next) => {
+    uploadMemory(req, res, async (err) => {
+      try {
+        if (err) throw new Error('Gagal mengunggah file.');
+        if (!req.file) throw new Error('File Excel tidak ditemukan. Gunakan key form-data: excel_file');
+
+        const importLansiaExcelUseCase = container.getInstance('ImportLansiaExcelUseCase');
+        const totalImported = await importLansiaExcelUseCase(req.file.buffer);
+
+        res.status(201).json({
+          status: 'success',
+          message: `Berhasil mengimport data masal! Total ${totalImported} biodata lansia baru berhasil masuk ke database.`,
+        });
+      } catch (error) {
+        next(error);
+      }
+    });
+  };
+
+  return { getTemplateHandler, postImportExcelHandler };
+};
+
+// export default makeLansiaHandler;
+export { makeLansiaHandler, makeLansiaExcelHandler };

@@ -174,7 +174,28 @@
             }
           }
         },
-        "responses": { "201": { "description": "Antrean berhasil dibuat (Status: PROCESSING)" } }
+        "responses": { "201": { "description": "Antrean berhasil dibuat (Status: PENDING)" } }
+      }
+    },
+    "/pemeriksaan/{id}/process": {
+      "put": {
+        "summary": "Memprosess Antrean Pemeriksaan",
+        "tags": ["3. Alur Pemeriksaan & IoT"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" }, "description": "ID Pemeriksaan (Antrean)" }
+        ],
+        "responses": { 
+          "200": { 
+            "description": "Antrean Berhasil diproses (Status: PROCESSED)" 
+          },
+           "401": {
+            "description": "Token tidak valid atau tidak ditemukan"
+          },
+          "404": {
+            "description": "Data pemeriksaan tidak ditemukan"
+          }
+         }
       }
     },
     "/pemeriksaan/{id}/cancel": {
