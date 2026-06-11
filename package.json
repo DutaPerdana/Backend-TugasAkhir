@@ -1,0 +1,42 @@
+{
+  "name": "iot-lansia",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/app.js",
+    "start:dev": "nodemon src/app.js",
+    "dev": "node --watch src/app.js",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "lint": "eslint ./",
+    "lint:fix": "eslint ./ --fix",
+    "migrate": "node-pg-migrate"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
+    "nanoid": "^5.1.11",
+    "node-pg-migrate": "^8.0.4",
+    "pdfkit": "^0.19.0",
+    "pg": "^8.21.0",
+    "swagger-ui-express": "^5.0.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.1",
+    "eslint-config-dicodingacademy": "^0.9.5",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.8"
+  }
+}

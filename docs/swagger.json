@@ -1,0 +1,242 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Sistem Monitoring Kesehatan Lansia (IoT & ML)",
+    "version": "2.0.0",
+    "description": "Dokumentasi REST API lengkap untuk integrasi Backend Node.js, Frontend Web, dan Hardware ESP32."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Local Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Masukkan token JWT di sini (tanpa perlu mengetik 'Bearer ')."
+      }
+    }
+  },
+  "paths": {
+    "/users": {
+      "post": {
+        "summary": "1. Mendaftarkan User/Perawat Baru",
+        "tags": ["1. Manajemen Akses (Auth)"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string", "example": "perawat_budi" },
+                  "password": { "type": "string", "example": "password123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "User berhasil dibuat" } }
+      },
+      "get": {
+        "summary": "Melihat Daftar Semua User (Hanya Super Admin)",
+        "tags": ["1. Manajemen Akses (Auth)"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Berhasil menampilkan data" }, "403": { "description": "Akses Ditolak (Bukan Super Admin)" } }
+      }
+    },
+    "/users/{id}": {
+      "delete": {
+        "summary": "Menghapus User (Hanya Super Admin)",
+        "tags": ["1. Manajemen Akses (Auth)"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" }, "description": "ID User yang akan dihapus" }
+        ],
+        "responses": { "200": { "description": "User berhasil dihapus" } }
+      }
+    },
+    "/authentications": {
+      "post": {
+        "summary": "2. Login User (Mendapatkan Token)",
+        "tags": ["1. Manajemen Akses (Auth)"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string", "example": "perawat_budi" },
+                  "password": { "type": "string", "example": "password123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Login berhasil, mengembalikan Token JWT" } }
+      },
+      "delete": {
+        "summary": "3. Logout User (Menghapus Token)",
+        "tags": ["1. Manajemen Akses (Auth)"],
+        "security": [{ "bearerAuth": [] }],
+        "description": "Tidak perlu mengirim Body. Token diambil otomatis dari Header Authorization.",
+        "responses": { "200": { "description": "Logout berhasil, token dimusnahkan" } }
+      }
+    },
+    "/lansia": {
+      "get": {
+        "summary": "Melihat Daftar Semua Lansia",
+        "tags": ["2. Manajemen Pasien (Lansia)"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Berhasil" } }
+      },
+      "post": {
+        "summary": "Menambahkan Data Lansia Baru",
+        "tags": ["2. Manajemen Pasien (Lansia)"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nama": { "type": "string", "example": "Kakek Sugiono" },
+                  "alamat": { "type": "string", "example": "Jl. Merdeka No. 10, Batu Bara" },
+                  "tanggal_lahir": { "type": "string", "example": "1950-05-12" },
+                  "jenis_kelamin": { "type": "string", "example": "Laki-laki" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Lansia berhasil ditambahkan" } }
+      }
+    },
+    "/lansia/{id}": {
+      "put": {
+        "summary": "Mengedit Data Lansia",
+        "tags": ["2. Manajemen Pasien (Lansia)"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nama": { "type": "string", "example": "Kakek Sugiono (Revisi)" },
+                  "alamat": { "type": "string", "example": "Kec. Sei Suka, Batu Bara" },
+                  "tanggal_lahir": { "type": "string", "example": "1950-05-12" },
+                  "jenis_kelamin": { "type": "string", "example": "Laki-laki" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Berhasil diupdate" } }
+      },
+      "delete": {
+        "summary": "Menghapus Data Lansia",
+        "tags": ["2. Manajemen Pasien (Lansia)"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Berhasil dihapus" } }
+      }
+    },
+    "/pemeriksaan": {
+      "post": {
+        "summary": "Membuat Antrean Pemeriksaan Baru",
+        "tags": ["3. Alur Pemeriksaan & IoT"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "lansia_id": { "type": "string", "example": "lansia-12345" },
+                  "berat_badan": { "type": "number", "example": 60.5 },
+                  "tinggi_badan": { "type": "number", "example": 165 }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Antrean berhasil dibuat (Status: PROCESSING)" } }
+      }
+    },
+    "/pemeriksaan/{id}/cancel": {
+      "put": {
+        "summary": "Membatalkan Antrean Pemeriksaan",
+        "tags": ["3. Alur Pemeriksaan & IoT"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" }, "description": "ID Pemeriksaan (Antrean)" }
+        ],
+        "responses": { "200": { "description": "Antrean dibatalkan (Status: CANCELLED)" } }
+      }
+    },
+    "/iot/antrean": {
+      "get": {
+        "summary": "ESP32 Cek Antrean Lansia",
+        "tags": ["3. Alur Pemeriksaan & IoT"],
+        "description": "Endpoint khusus untuk alat ESP32. Tidak memerlukan Token.",
+        "responses": { "200": { "description": "Mengembalikan data antrean tertua (atau null jika kosong)" } }
+      }
+    },
+    "/iot/result": {
+      "post": {
+        "summary": "ESP32 Mengirim Data Sensor (Trigger Machine Learning)",
+        "tags": ["3. Alur Pemeriksaan & IoT"],
+        "description": "ESP32 mengirim data. Backend akan memanggil model YOLO/ML untuk klasifikasi risiko.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pending_id": { "type": "string", "example": "pemeriksaan-12345" },
+                  "suhu": { "type": "number", "example": 36.5 },
+                  "spo2": { "type": "number", "example": 98 },
+                  "detak_jantung": { "type": "number", "example": 80 },
+                  "sistol": { "type": "number", "example": 120 },
+                  "diastol": { "type": "number", "example": 80 }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Data berhasil disimpan dan status menjadi COMPLETED" } }
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "summary": "Melihat Data Statistik Dashboard",
+        "tags": ["4. Laporan & Statistik"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Mengembalikan agregasi data lansia, pemeriksaan bulan ini, dan risiko" } }
+      }
+    },
+    "/histori": {
+      "get": {
+        "summary": "Melihat Riwayat Pemeriksaan",
+        "tags": ["4. Laporan & Statistik"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Mengembalikan riwayat lengkap lansia yang telah diperiksa" } }
+      }
+    }
+  }
+}
