@@ -2,45 +2,43 @@ import NotFoundError from '../../Commons/exceptions/NotFoundError.js';
 
 export const makePemeriksaanRepositoryPostgres = (pool, idGenerator) => {
 
-  // const addPemeriksaan = async (newPemeriksaan) => {
-  //   const { lansia_id, berat_badan, tinggi_badan } = newPemeriksaan;
-  //   const id = `periksa-${idGenerator(16)}`;
-
-  //   const query = {
-  //     text: 'INSERT INTO pemeriksaan (id, lansia_id, berat_badan, tinggi_badan, status) VALUES($1, $2, $3, $4, $5) RETURNING id, lansia_id, status',
-  //     values: [id, lansia_id, berat_badan, tinggi_badan, 'PROCESSING'],
-  //   };
-
-  //   const result = await pool.query(query);
-  //   return result.rows[0]; // Mengembalikan ID yang akan dilempar ke ESP32
-  // };
+  // 1. Fungsi Daftar (Hanya memasukkan ke ruang tunggu)
   const addPemeriksaan = async (newPemeriksaan) => {
-  // 1. LAPISAN PELINDUNG: Cek apakah masih ada lansia yang sedang antre/diperiksa
+    const { lansia_id, berat_badan, tinggi_badan } = newPemeriksaan;
+    const id = `periksa-${idGenerator(16)}`;
+
+    const query = {
+      text: 'INSERT INTO pemeriksaan (id, lansia_id, berat_badan, tinggi_badan, status) VALUES($1, $2, $3, $4, $5) RETURNING id, lansia_id, status',
+      values: [id, lansia_id, berat_badan, tinggi_badan, 'PENDING'], // <--- Berubah jadi PENDING
+    };
+
+    const result = await pool.query(query);
+    return result.rows[0];
+  };
+
+  // 2. Fungsi Baru: Memajukan antrean ke alat ESP32
+  const processPemeriksaan = async (id) => {
+    // LAPISAN PELINDUNG: Cek apakah masih ada yang statusnya PROCESSING
     const checkQuery = {
       text: 'SELECT id FROM pemeriksaan WHERE status = $1',
       values: ['PROCESSING'],
     };
 
     const checkResult = await pool.query(checkQuery);
-
-    // Jika rowCount lebih dari 0, berarti masih ada alat ESP32 yang bekerja untuk antrean lain
     if (checkResult.rowCount > 0) {
-      throw new InvariantError('Gagal membuat antrean baru karena masih ada antrean yang sedang berjalan.');
+      throw new InvariantError('Gagal memproses. Masih ada lansia yang sedang diperiksa di alat ESP32.');
     }
 
-    // 2. EKSEKUSI UTAMA: Jika aman (tidak ada antrean aktif), lanjutkan proses insert
-    const { lansia_id, berat_badan, tinggi_badan } = newPemeriksaan;
-    const id = `periksa-${idGenerator(16)}`;
-
-    const query = {
-      text: 'INSERT INTO pemeriksaan (id, lansia_id, berat_badan, tinggi_badan, status) VALUES($1, $2, $3, $4, $5) RETURNING id, lansia_id, status',
-      values: [id, lansia_id, berat_badan, tinggi_badan, 'PROCESSING'],
+    // EKSEKUSI UTAMA: Ubah status dari PENDING menjadi PROCESSING
+    const updateQuery = {
+      text: "UPDATE pemeriksaan SET status = 'PROCESSING' WHERE id = $1 AND status = 'PENDING' RETURNING id",
+      values: [id],
     };
 
-    const result = await pool.query(query);
-
-    // Mengembalikan ID yang akan dilempar ke ESP32
-    return result.rows[0];
+    const updateResult = await pool.query(updateQuery);
+    if (updateResult.rowCount === 0) {
+      throw new NotFoundError('Gagal memproses. Antrean tidak ditemukan atau statusnya bukan PENDING.');
+    }
   };
   /**
    * Mengambil 1 antrean terlama yang statusnya masih 'PROCESSING'.
@@ -115,5 +113,6 @@ export const makePemeriksaanRepositoryPostgres = (pool, idGenerator) => {
     updateHasilPemeriksaan,
     getHistoryPemeriksaan,
     cancelPemeriksaan,
+    processPemeriksaan,
   };
 };
